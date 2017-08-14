@@ -42,3 +42,5 @@ dependencies {
     compile 'com.android.support:support-v4:25.2.0'
     compile 'com.android.support:support-vector-drawable:25.2.0'
 }
+
+apply plugin: 'com.google.gms.google-services'
