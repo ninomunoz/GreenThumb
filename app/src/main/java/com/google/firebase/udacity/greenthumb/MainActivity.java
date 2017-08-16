@@ -30,6 +30,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.udacity.greenthumb.data.DbContract.PlantEntry;
 import com.google.firebase.udacity.greenthumb.data.Preferences;
 
@@ -65,6 +66,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         // Kick off the loader
         getSupportLoaderManager().initLoader(PLANT_LOADER, null, this);
+
+        // Call the line below to cause a crash.
+        //fatalError();
+
+        // Call the line below to report a non-fatal error.
+        //reportNonFatalError();
     }
 
     @Override
@@ -143,6 +150,15 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                     }
                 })
                 .show();
+    }
+
+    private void fatalError() {
+        // Cause a crash for Firebase Crash Reporting
+        throw new NullPointerException();
+    }
+
+    private void reportNonFatalError() {
+        FirebaseCrash.report(new Exception("Reporting non-fatal error"));
     }
 
     @Override
