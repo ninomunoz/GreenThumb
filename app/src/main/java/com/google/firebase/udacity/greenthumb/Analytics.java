@@ -41,4 +41,13 @@ public class Analytics {
     public static void logEventViewProfile(Context context) {
         FirebaseAnalytics.getInstance(context).logEvent("view_profile", null);
     }
+
+    public static void setUserPropertyGardeningExperience(Context context, int experienceIndex) {
+        String userPropertyKey = context.getString(R.string.user_property_key_gardening_experience);
+
+        String[] userPropertyValues = context.getResources().getStringArray(R.array.user_property_values_gardening_experience);
+
+        FirebaseAnalytics.getInstance(context).setUserProperty(
+                userPropertyKey, userPropertyValues[experienceIndex]);
+    }
 }
