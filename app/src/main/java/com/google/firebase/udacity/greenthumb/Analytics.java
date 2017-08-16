@@ -22,4 +22,23 @@ public class Analytics {
 
         FirebaseAnalytics.getInstance(context).logEvent(FirebaseAnalytics.Event.ADD_TO_CART, params);
     }
+
+    public static void logEventViewItem(Context context, Plant plant) {
+        Bundle params = new Bundle();
+        params.putInt(FirebaseAnalytics.Param.ITEM_ID, plant.id);
+        params.putString(FirebaseAnalytics.Param.ITEM_NAME, plant.name);
+        FirebaseAnalytics.getInstance(context).logEvent(FirebaseAnalytics.Event.VIEW_ITEM, null);
+    }
+
+    public static void logEventBeginCheckout(Context context) {
+        FirebaseAnalytics.getInstance(context).logEvent(FirebaseAnalytics.Event.BEGIN_CHECKOUT, null);
+    }
+
+    public static void logEventEcommercePurchase(Context context) {
+        FirebaseAnalytics.getInstance(context).logEvent(FirebaseAnalytics.Event.ECOMMERCE_PURCHASE, null);
+    }
+
+    public static void logEventViewProfile(Context context) {
+        FirebaseAnalytics.getInstance(context).logEvent("view_profile", null);
+    }
 }
