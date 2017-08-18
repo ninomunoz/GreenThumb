@@ -17,7 +17,9 @@ package com.google.firebase.udacity.greenthumb;
 
 import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
@@ -33,6 +35,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.google.android.gms.appinvite.AppInvite;
+import com.google.android.gms.appinvite.AppInviteInvitationResult;
+import com.google.android.gms.appinvite.AppInviteReferral;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.crash.FirebaseCrash;
@@ -47,8 +55,10 @@ import java.util.Map;
 /**
  * {@link MainActivity} displays a list of plants to buy.
  */
-public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>,
+        GoogleApiClient.OnConnectionFailedListener {
 
+    private static final String TAG = "MainActivity";
     private static final int PLANT_LOADER = 1;
 
     PlantAdapter mAdapter;
@@ -59,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     private static final String PLANT_DESCRIPTIONS_KEY = "plant_descriptions";
     private static final String DEFAULT_PLANT_DESCRIPTIONS_LEVEL = "basic";
+
+    private GoogleApiClient mGoogleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,6 +111,14 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
 
         fetchConfig();
+
+        // Build GoogleApiClient with AppInvite API for receiving deep links
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this, this)
+                .addApi(AppInvite.API)
+                .build();
+
+        handleDynamicLink();
     }
 
     @Override
@@ -246,6 +266,33 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         }
     }
 
+    private void handleDynamicLink() {
+        // Check if this app was launched from a deep link. Setting autoLaunchDeepLink to true
+        // would automatically launch the deep link if one is found.
+        boolean autoLaunchDeepLink = false;
+        AppInvite.AppInviteApi.getInvitation(mGoogleApiClient, this, autoLaunchDeepLink)
+                .setResultCallback(
+                        new ResultCallback<AppInviteInvitationResult>() {
+                            @Override
+                            public void onResult(@NonNull AppInviteInvitationResult result) {
+                                if (result.getStatus().isSuccess()) {
+                                    // Extract deep link from intent
+                                    Intent intent = result.getInvitationIntent();
+                                    String deepLink = AppInviteReferral.getDeepLink(intent);
+
+                                    // Handle the deep link.
+                                    Uri uri = Uri.parse(deepLink);
+                                    int plantId = Integer.parseInt(uri.getLastPathSegment());
+                                    PlantDetailActivity.startActivity(MainActivity.this, plantId);
+                                }
+                                else {
+                                    Log.d(TAG, "getInvitation: no deep link found.");
+                                }
+                            }
+                        }
+                );
+    }
+
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String[] projection = {
@@ -270,5 +317,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mAdapter.swapCursor(null);
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.e(TAG, "GoogleApiClient connection failed: " + connectionResult.getErrorMessage());
     }
 }
